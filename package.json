@@ -10,7 +10,7 @@
   "scripts": {
     "start": "electron .",
     "test": "node --test \"test/*.test.js\"",
-    "build:win": "electron-builder --win --dir --x64 --config.win.signAndEditExecutable=false && makensis build/EFEMERA.nsi"
+    "build:win": "electron-builder --win --dir --x64 --config.win.signAndEditExecutable=false && makensis -INPUTCHARSET UTF8 build/EFEMERA.nsi"
   },
   "dependencies": {},
   "devDependencies": {
