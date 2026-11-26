@@ -8,8 +8,10 @@ Aplicação para **um único computador**, sem servidor: envia os avisos **atrav
 
 **[Descarregar a última versão — Windows 10/11](https://github.com/lecxll-cell/efemera/releases/latest)**
 
+🛡️ **Verificado:** análise antivírus no [VirusTotal](https://www.virustotal.com/gui/file/3a1ff7b058e3a57f213e4269954b36fcb4321d37e34e0f4aa2491a7f5a320ea2) — limpo nos principais antivírus, incluindo o **Microsoft Defender**.
+
 Instalação por utilizador (sem administrador). Requer o Outlook clássico instalado e configurado.
-Como ainda não está assinado, o Windows pode mostrar o SmartScreen: **"Mais informações" → "Executar à mesma"**.
+Como ainda não tem assinatura digital, o Windows pode mostrar o SmartScreen: **"Mais informações" → "Executar à mesma"**.
 
 ## Como funcionam os avisos
 - **Período de avisos:** de *data − antecedência* até à data. A antecedência é de **90 dias no mínimo** (máximo 365), definida nas Definições e ajustável em cada efeméride.
