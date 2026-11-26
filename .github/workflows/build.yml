@@ -47,3 +47,12 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           files: dist/EFEMERA-Setup-0.4.1.exe
+
+      - name: Analisar no VirusTotal (só em etiquetas v*)
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: crazy-max/ghaction-virustotal@v4
+        with:
+          vt_api_key: ${{ secrets.VT_API_KEY }}
+          update_release_body: true
+          files: |
+            dist/EFEMERA-Setup-0.4.1.exe
