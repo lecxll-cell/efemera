@@ -53,6 +53,21 @@ jobs:
         uses: crazy-max/ghaction-virustotal@v4
         with:
           vt_api_key: ${{ secrets.VT_API_KEY }}
-          update_release_body: true
           files: |
             dist/EFEMERA-Setup-0.4.1.exe
+
+      - name: Acrescentar o link do VirusTotal às notas da release
+        if: startsWith(github.ref, 'refs/tags/v')
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $tag = "${{ github.ref_name }}"
+          $sha = (Get-FileHash "dist/EFEMERA-Setup-0.4.1.exe" -Algorithm SHA256).Hash.ToLower()
+          $url = "https://www.virustotal.com/gui/file/$sha"
+          $notes = gh release view $tag --json body -q .body
+          if ($notes -match 'VirusTotal') { Write-Host "Link ja presente; nada a fazer."; exit 0 }
+          $notes = $notes + "`n`n**Analise antivirus (VirusTotal):** $url"
+          Set-Content -Path vt-notes.md -Value $notes -Encoding utf8
+          gh release edit $tag --notes-file vt-notes.md
+          Write-Host "Link do VirusTotal acrescentado as notas."
