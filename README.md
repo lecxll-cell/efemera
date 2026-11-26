@@ -4,6 +4,13 @@ Serviço de Património Cultural - Município de Mirandela
 
 Aplicação para **um único computador**, sem servidor: envia os avisos **através do Outlook clássico** instalado nesse computador (não funciona com o «novo Outlook»).
 
+## ⬇️ Descarregar
+
+**[Descarregar a última versão — Windows 10/11](https://github.com/lecxll-cell/efemera/releases/latest)**
+
+Instalação por utilizador (sem administrador). Requer o Outlook clássico instalado e configurado.
+Como ainda não está assinado, o Windows pode mostrar o SmartScreen: **"Mais informações" → "Executar à mesma"**.
+
 ## Como funcionam os avisos
 - **Período de avisos:** de *data − antecedência* até à data. A antecedência é de **90 dias no mínimo** (máximo 365), definida nas Definições e ajustável em cada efeméride.
 - **Frequência dos avisos** (nas Definições e em cada efeméride): *Diários* (até a efeméride ser posta em suspensão ou chegar a data) · *Dias de semana* · *Dia sim, dia não* · *Semana a semana* · *De 15 em 15 dias* · *De mês a mês*. Predefinição: Semana a semana.
