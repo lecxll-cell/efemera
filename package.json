@@ -1,0 +1,35 @@
+{
+  "name": "efemera",
+  "productName": "EFÉMERA",
+  "version": "0.4.1",
+  "description": "EFÉMERA — avisos de efemérides por e-mail para técnicos do Serviço de Património Cultural - Município de Mirandela",
+  "author": "|ªLºP (com recurso a IA) — para o Serviço de Património Cultural do Município de Mirandela",
+  "license": "MIT",
+  "copyright": "© 2026 |ªLºP. Todos os direitos reservados.",
+  "main": "src/main.js",
+  "scripts": {
+    "start": "electron .",
+    "test": "node --test \"test/*.test.js\"",
+    "build:win": "electron-builder --win --dir --x64 --config.win.signAndEditExecutable=false && makensis build/EFEMERA.nsi"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "electron": "^35.7.5",
+    "electron-builder": "^25.1.8"
+  },
+  "build": {
+    "appId": "pt.cm-mirandela.efemera",
+    "productName": "EFÉMERA",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "src/**/*",
+      "assets/**/*",
+      "package.json"
+    ],
+    "win": {
+      "executableName": "EFEMERA"
+    }
+  }
+}

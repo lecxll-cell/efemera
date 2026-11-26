@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="pt"><head><meta charset="utf-8"><meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data: file:; style-src 'self' 'unsafe-inline'; font-src 'self' file:; script-src 'self'">
+<meta name="viewport" content="width=device-width,initial-scale=1"><title>EFÉMERA</title>
+<style>
+@font-face{font-family:Inter;font-weight:400;src:url(../../assets/fonts/inter-400.woff2) format('woff2')}
+@font-face{font-family:Inter;font-weight:500;src:url(../../assets/fonts/inter-500.woff2) format('woff2')}
+@font-face{font-family:Inter;font-weight:600;src:url(../../assets/fonts/inter-600.woff2) format('woff2')}
+@font-face{font-family:'Instrument Serif';font-weight:400;src:url(../../assets/fonts/instrument-serif-400.woff2) format('woff2')}
+@font-face{font-family:'Instrument Serif';font-weight:400;font-style:italic;src:url(../../assets/fonts/instrument-serif-400-italic.woff2) format('woff2')}
+:root{--mt:rgba(255,255,255,.7);--ln:rgba(255,255,255,.16);--ok:#30d158;--wa:#ff9f0a;--er:#ff453a;color-scheme:dark}
+*{box-sizing:border-box}body{margin:0;background:#000;color:#fff;font:14px/1.45 Inter,"Segoe UI",sans-serif}
+.rl{position:fixed;top:0;bottom:0;left:0;width:76px;border-right:1px solid var(--ln);background:#000;display:flex;flex-direction:column;align-items:center;gap:10px;padding:24px 0;z-index:3}
+.rl button{width:48px;height:48px;min-height:0;padding:0;border-radius:50%;border:1px solid transparent;color:var(--mt);display:grid;place-items:center}.rl button:hover{color:#fff;border-color:var(--ln)}.rl button.on{background:#fff;color:#000}
+main{margin-left:76px;position:relative;z-index:1;padding:44px 56px 100px}
+#dw{position:fixed;right:-29vw;bottom:-55px;width:72vw;opacity:.95;pointer-events:none;z-index:0}
+.k{font-size:12px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:var(--mt)}
+h1{margin:6px 0 26px;font:400 clamp(60px,9.3vw,112px)/.92 'Instrument Serif',serif;letter-spacing:-.03em}h1 em{font-style:italic}
+h2{font-size:15px;font-weight:600;margin:28px 0 10px}
+#pill{position:fixed;left:100px;bottom:24px;z-index:3;display:flex;align-items:center;gap:10px;padding:10px 16px;border-radius:999px;border:1px solid rgba(255,255,255,.22);background:#000;font-size:13px;cursor:pointer}
+#pill::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--c)}#pill.ok{--c:var(--ok)}#pill.wa{--c:var(--wa)}#pill.er{--c:var(--er)}
+.bar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:16px}.bar .sp{flex:1}
+.tw{overflow:auto}table{width:100%;border-collapse:collapse}
+th{font-size:11px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--mt);text-align:left;padding:8px 10px;border-bottom:1px solid #fff}
+td{padding:12px 10px;border-bottom:1px solid var(--ln);vertical-align:top}tr.row{cursor:pointer}tr.row:hover td{background:rgba(255,255,255,.05)}
+.chip{display:inline-block;padding:1px 10px;border-radius:999px;font-size:12px;border:1px solid currentColor}.ok{color:var(--ok)}.wa{color:var(--wa)}.er{color:var(--er)}.mt,.hint{color:var(--mt)}.hint{font-size:12px}
+button{font:inherit;font-weight:600;padding:10px 18px;min-height:40px;border-radius:999px;border:1px solid rgba(255,255,255,.4);background:transparent;color:#fff;cursor:pointer}button.p{background:#fff;color:#000;border-color:#fff}button:disabled{opacity:.5}
+input,select,textarea{font:inherit;padding:9px 12px;border:1px solid var(--ln);border-radius:12px;background:#0b0b0b;color:#fff;width:100%}select.est{width:auto;max-width:100%;padding:6px 12px;font-size:12px;border-radius:999px;border-color:currentColor;background:#000}
+label{display:block;font-size:12px;color:var(--mt);margin:12px 0 4px}label.c{display:flex;gap:8px;align-items:center;color:#fff;font-size:14px}label.c input{width:auto}
+.card{background:#0b0b0b;border:1px solid var(--ln);border-radius:20px;padding:18px 20px;margin-bottom:14px}.g2{display:grid;grid-template-columns:1fr 1fr;gap:4px 16px}
+dialog{border:1px solid var(--ln);border-radius:24px;background:#0b0b0b;color:#fff;width:min(720px,95vw);max-height:94vh;overflow:auto;padding:24px}dialog::backdrop{background:rgba(0,0,0,.75)}
+.err{color:var(--er);min-height:1.3em;font-size:13px;margin-top:6px}.row2{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.prob{padding:10px 14px;border-left:3px solid;margin-bottom:8px;background:#0b0b0b;border-radius:0 12px 12px 0}
+#toast{position:fixed;right:24px;bottom:24px;background:#fff;color:#000;padding:12px 18px;border-radius:14px;display:none;max-width:420px;z-index:9;font-weight:500}
+.tl{list-style:none;margin:8px 0 0;padding:0;max-width:640px}.it{display:grid;grid-template-columns:104px 26px 1fr;gap:14px;align-items:start;padding-bottom:26px}
+.d{display:flex;flex-direction:column;align-items:flex-end;line-height:1}.d b{font:400 54px 'Instrument Serif',serif}.d span{font-size:12px;letter-spacing:.16em;color:var(--mt);margin-top:4px}
+.dt{width:14px;height:14px;border-radius:50%;margin:20px auto 0;position:relative;background:var(--ok);box-shadow:0 0 0 5px #000}.dt::after{content:"";position:absolute;left:6px;top:14px;height:78px;width:2px;background:rgba(255,255,255,.22)}.it:last-child .dt::after{display:none}.dt.y{background:var(--wa)}.dt.r{background:var(--er)}
+.it h2{margin:0;font-size:20px;letter-spacing:-.01em}.it p{margin:4px 0 0;font-size:14px;color:var(--mt)}
+.fl{margin-bottom:22px}.fl button{min-height:34px;padding:6px 14px;font-size:13px}
+.an{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px 36px}.an h2{font:italic 400 30px 'Instrument Serif',serif;margin:6px 0 8px;border-bottom:1px solid var(--ln);padding-bottom:6px}.ai{padding:3px 0;font-size:15px;cursor:pointer}.ai:hover{text-decoration:underline}.ai b{font-weight:600}
+.em{display:flex;flex-direction:column;gap:12px;align-items:flex-start;max-width:420px}.em b{font-size:22px;font-weight:600}.em p{margin:0;color:var(--mt)}
+</style></head><body>
+<aside class="rl" id="nav"></aside>
+<img id="dw" src="../../assets/efemera-branco.png" alt="" hidden>
+<main id="app"></main><button id="pill" class="ok">a carregar…</button><div id="toast"></div>
+<dialog id="dlg"><div id="dbody"></div></dialog>
+<script src="app.js"></script></body></html>

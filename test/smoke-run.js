@@ -1,0 +1,60 @@
+'use strict';
+// Teste de fumo da app REAL (Electron + janela + IPC + motor). O envio é simulado (nunca chama o Outlook).
+const fs = require('fs');
+module.exports = ({ win, store, engine, app, smokeMail }) => {
+  const results = []; const ok = (n, c, x = '') => { results.push(c); console.log(c ? '  ✓' : '  ✗', n, c ? '' : x); };
+  const run = code => win.webContents.executeJavaScript(code, true), wait = ms => new Promise(r => setTimeout(r, ms));
+  const click = async (t) => { await run(`document.querySelector('#nav [data-t="${t}"]').click()`); await wait(700); };
+  const text = () => run('document.querySelector("#app").innerText');
+  (async () => {
+    try {
+      win.show(); await new Promise(r => (win.webContents.isLoading() ? win.webContents.once('did-finish-load', r) : r())); await wait(800);
+      ok('a app arranca LIMPA: sem efemérides nem dados de exemplo', (await run('api.state().then(s => s.efemerides.length)')) === 0 && !store.data.historico.some(h => h.tipo !== 'sistema'));
+      await click('agenda'); const vz = await text(); ok('Agenda vazia: «Sem avisos previstos»', /Sem avisos previstos/.test(vz) && /Próximos\s*avisos/i.test(vz), vz.slice(0, 200));
+      const nav = await run(`[...document.querySelectorAll('#nav button')].map(b => b.getAttribute('aria-label'))`); ok('menu lateral só com ícones (5, com nome acessível)', JSON.stringify(nav) === JSON.stringify(['Efemérides', 'Anuário', 'Agenda de avisos', 'Estado', 'Definições']), JSON.stringify(nav));
+      const api = await run('Object.keys(api)');
+      ok('API só tem o que ficou (sem verificar agora, modelo, CSV, imagens, cópias, tarefa)', !['checkNow', 'loadModelo', 'importCSV', 'exportCSV', 'pickImage', 'imageData', 'backup', 'openData', 'installTask'].some(k => api.includes(k)), api.join());
+      const bad = await run(`api.saveConfig({nome:'Ana',hora:'00:00',destinatario:'ana@cm-mirandela.pt',antecedencia:60,frequencia:'diarios',permitir_hibernacao:true,iniciarComWindows:false}).then(()=>'aceite',e=>e.message)`);
+      ok('antecedência abaixo de 90 é recusada', /mínima é de 90/.test(bad), bad);
+      const two = await run(`api.saveConfig({nome:'Ana',hora:'00:00',destinatario:'a@x.pt; b@x.pt',antecedencia:90,frequencia:'diarios',permitir_hibernacao:true}).then(()=>'aceite',e=>e.message)`);
+      ok('só é aceite um e-mail', /único e-mail/.test(two), two);
+      await run(`api.saveConfig({nome:'Ana',hora:'00:00',destinatario:'ana@cm-mirandela.pt',antecedencia:90,frequencia:'diarios',permitir_hibernacao:true,iniciarComWindows:false})`);
+      const r = await run(`(async()=>{const d=new Date();d.setDate(d.getDate()+90);const iso=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+        const id=await api.saveEf({titulo:'Dia Internacional dos Museus (teste)',tipo:'dias',data:'1977'+iso.slice(4)});const s=await api.state();const e=s.efemerides.find(x=>x.id===id);return {id,estado:e.estadoTxt,avisos:e.avisos,iso};})()`);
+      ok('nova efeméride fica «Ativo (saído da hibernação, deverá começar a ser notificado)»', r.estado === 'Ativo (saído da hibernação, deverá começar a ser notificado)', r.estado); ok('Avisos: aviso de hoje (1 de 91)', r.avisos === 'Aviso de hoje (1 de 91)', r.avisos);
+      await wait(2000); ok('e-mail criado e «enviado» para um só destinatário', smokeMail.length === 1 && smokeMail[0].to.length === 1 && smokeMail[0].to[0] === 'ana@cm-mirandela.pt', JSON.stringify(smokeMail.map(m => m.to)));
+      ok('assunto e corpo corretos, sem estado/publicação', /Faltam 90 dias: «Dia Internacional dos Museus \(teste\)»/.test(smokeMail[0].subject) && !/Estado:|Publicação/.test(smokeMail[0].html) && /Anos de aniversário|Tipo:/.test(smokeMail[0].html));
+      await engine.check(); ok('nova verificação no mesmo dia não repete o e-mail', smokeMail.length === 1);
+      await click('agenda'); const ag = await text(); ok('Agenda: janela de avisos com início, fim, n.º de e-mails e data', /Avisos de \d+ de \w+ a \d+ de \w+ · Diários · 91 e-mails/.test(ag) && /Próximo aviso/.test(ag) && /Data a assinalar/.test(ag), ag.slice(0, 300));
+      fs.writeFileSync('/tmp/smoke-agenda.png', (await win.webContents.capturePage()).toPNG());
+      await click('anuario'); const an = await text(); ok('Anuário: 12 meses, filtros dos tipos e a efeméride no mês certo', /Janeiro[\s\S]*Dezembro/.test(an) && /Dias nacionais e internacionais de património cultural/.test(an) && /Encontros, palestras e jornadas/.test(an) && /Inscrições e Categorias de classificação/.test(an) && /Dia Internacional dos Museus \(teste\)/.test(an), an.slice(0, 300));
+      await run(`document.querySelector('[data-f="pessoas"]').click()`); await wait(400); ok('Anuário: o filtro esconde os outros tipos', !/Dia Internacional dos Museus \(teste\)/.test(await text())); await run(`document.querySelector('[data-f=""]').click()`); await wait(300);
+      fs.writeFileSync('/tmp/smoke-anuario.png', (await win.webContents.capturePage()).toPNG());
+      await click('efemerides'); const tab = await text(); const opts = await run(`[...document.querySelectorAll('select.est option')].slice(0,3).map(o=>o.textContent)`);
+      ok('tabela: colunas Data/Tipo/Título/Anos/Estado/Avisos e sem Publicação', /Data[\s\S]*Tipo[\s\S]*Título[\s\S]*Anos[\s\S]*Estado[\s\S]*Avisos/i.test(tab) && !/Publicação/.test(tab));
+      ok('Estado com as 3 opções exatas', JSON.stringify(opts) === JSON.stringify(['Ativo (saído da hibernação, deverá começar a ser notificado)', 'Ativo (em hibernação)', 'Suspenso (indefinidamente)']), JSON.stringify(opts));
+      ok('«Carregar modelo», «Importar CSV» e «Exportar CSV» removidos', !/Carregar modelo|Importar CSV|Exportar CSV/.test(tab));
+      await run(`(async()=>{const sel=document.querySelector('select.est');sel.value='hibernacao';sel.dispatchEvent(new Event('change'))})()`); await wait(1200);
+      const t2 = await text(); ok('mudar o estado na tabela hiberna: «Adormecida até…»', /Adormecida até \d{2}\/\d{2}\/\d{4}/.test(t2), t2.slice(0, 300));
+      await click('agenda'); ok('Agenda mostra a efeméride adormecida com a data de reativação', /Adormecida até \d{2}\/\d{2}\/\d{4}/.test(await text())); await click('efemerides');
+      const antes = smokeMail.length; await engine.check(); ok('em hibernação não gera mais e-mails', smokeMail.length === antes);
+      await run(`document.querySelector('tr.row td:nth-child(3)').click()`); await wait(700); const dlg = await run('document.querySelector("#dlg").innerText');
+      ok('ficha: Texto (opcional, máximo 250 palavras), Anos de aniversário, Frequência, Estado; sem Texto/Imagem/Crédito/Publicação/Duração', /Texto \(opcional, máximo 250 palavras\) 0\/250/.test(dlg) && !/Síntese/.test(dlg) && /Anos de aniversário/.test(dlg) && !/Calcular para o ano/.test(dlg) && /Frequência dos avisos/.test(dlg) && /Estado/.test(dlg) && /mín\. 90/.test(dlg) && !/Escolher imagem|Crédito|Publicação|Duração/.test(dlg), dlg.slice(0, 500));
+      const cal = await run("api.anos((new Date().getFullYear() - 100) + '-05-18')"); ok('anos de aniversário (ano corrente): 100 anos (centenário)', cal && cal.n === 100 && cal.marco && cal.texto === '100 anos (centenário)', JSON.stringify(cal));
+      const longa = await run(`api.saveEf({titulo:'X',data:'1950-01-01',texto:'${'palavra '.repeat(251)}'}).then(()=>'aceite',e=>e.message)`); ok('síntese com mais de 250 palavras é recusada', /máximo 250/.test(longa), longa);
+      fs.writeFileSync('/tmp/smoke-ficha.png', (await win.webContents.capturePage()).toPNG());
+      await run('document.querySelector("#f_cancel").click()');
+      fs.writeFileSync('/tmp/smoke-efemerides.png', (await win.webContents.capturePage()).toPNG());
+      await click('definicoes'); const def = await text();
+      ok('Definições: 1 destinatário, sem «Em cópia», min. 90, frequência (sem duração), Outlook clássico fixo', /Frequência dos avisos/.test(def) && !/Duração|Modo|Um e-mail por/.test(def) && /Destinatário \(o seu e-mail\)/.test(def) && !/Em cópia|Destinatários/.test(def) && /min\. 90/.test(def) && /Outlook clássico/.test(def) && !/SMTP|Servidor|Porta|Palavra-passe/.test(def), def.slice(0, 500));
+      ok('hibernação: texto novo; «a correr em segundo plano»', /Deixar de avisar quando o utilizador suspender a efeméride no ano corrente\./.test(def) && /adormecidas até ao ano seguinte/.test(def) && /a 90 dias da data/.test(def) && /Iniciar com o Windows \(a correr em segundo plano\)/.test(def));
+      ok('removidos: tarefa de segurança, pasta de dados, cópia dos dados', !/tarefa de segurança|Abrir pasta|Guardar cópia/.test(def));
+      fs.writeFileSync('/tmp/smoke-definicoes.png', (await win.webContents.capturePage()).toPNG());
+      await click('estado'); const est = await text();
+      ok('Estado: sem «Verificar agora»; com e-mail de teste e tabela E-mails com os estados', !/Verificar agora/.test(est) && /Enviar e-mail de teste/.test(est) && /E-mails/.test(est) && /Ativo \(em hibernação\)/.test(est), est.slice(0, 400));
+      fs.writeFileSync('/tmp/smoke-estado.png', (await win.webContents.capturePage()).toPNG());
+      await run('document.querySelector("#bt").click()'); await wait(800); ok('e-mail de teste passa pelo transporte', smokeMail.some(m => /E-mail de teste/.test(m.subject)));
+    } catch (e) { ok('execução sem exceções', false, e.stack || e.message); }
+    const bad = results.filter(x => !x).length; console.log(`SMOKE ${results.length - bad}/${results.length} ${bad ? 'COM FALHAS' : 'OK'}`); app.exit(bad ? 1 : 0);
+  })();
+};
